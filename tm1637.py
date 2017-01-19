@@ -8,6 +8,7 @@ ADDR_AUTO = 0x40
 ADDR_FIX = 0x44
 DIGIT_CODE = [0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f, 0x00, 0x40]
 ADDR_CODE = [0xc0, 0xc1, 0xc2, 0xc3]
+START_ADDR = ADDR_CODE[0]
 MAX_BRIGHTNESS = 0x8f
 MIN_BRIGHTNESS = 0x80
 CHAR_MAP = {
@@ -71,11 +72,6 @@ class TM1637:
     self.low_di() 	#di 1->0
     self.low_clk()
 
-  def end_sending(self):
-    self.high_clk()
-    self.low_di()
-    self.high_di()
-
   def set_command(self, command):
     self.start_sending()
     self.writeByte(command)
@@ -99,16 +95,34 @@ class TM1637:
     self.set_command(MAX_BRIGHTNESS)
 
   def show_auto(self, data):
+    self.start()
     self.set_command(ADDR_AUTO)
+    self.stop()
+    self.start()
+    self.writeByte(START_ADDR)
     for i in range(0, 4):
         digit = int(data[i])
         print "digit:", digit
         digit_code = DIGIT_CODE[digit]
         self.writeByte(digit_code)
+    self.stop()
+    self.start()
     self.set_command(MAX_BRIGHTNESS)
+    self.stop()
 
   def clear(self):
     self.set_command(MIN_BRIGHTNESS)
+
+  def stop(self):
+    self.low_clk()
+    self.low_di()
+    self.high_clk()
+    self.high_di()
+
+  def start(self):
+    self.high_clk()
+    self.high_di()
+    self.low_di()
 
   def show(self, data):
     self.set_command(ADDR_AUTO)
@@ -129,6 +143,6 @@ class TM1637:
 
 if __name__ == "__main__":
     obj = TM1637(CLK,DI)
-    obj.show_fix("1234")
+    obj.show_auto("1234")
     raw_input("Press Enter to continue...")
     obj.clear()
