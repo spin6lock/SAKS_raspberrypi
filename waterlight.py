@@ -42,5 +42,6 @@ try:
     writeByte(0xff)
     time.sleep(0.5)
 except KeyboardInterrupt:
+  print "interrupt"
   writeByte(0x00)
   GPIO.cleanup()
