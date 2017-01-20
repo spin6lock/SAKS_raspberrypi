@@ -14,8 +14,8 @@ MIN_BRIGHTNESS = 0x80
 CHAR_MAP = {
     'L':0x38,
     'O':0x3f,
-    'V':0x3f,
-    'E':0x3e,
+    'V':0x1c, #0x3e
+    'E':0x79,
 }
 
 GPIO.setmode(GPIO.BCM)
@@ -125,24 +125,37 @@ class TM1637:
     self.low_di()
 
   def show(self, data):
+    self.start()
     self.set_command(ADDR_AUTO)
+    self.stop()
+    self.start()
+    self.writeByte(START_ADDR)
     for i in range(0, 4):
       char = data[i]
       if char.isdigit():
         digit = int(data[i])
         digit_code = DIGIT_CODE[digit]
         self.writeByte(digit_code)
-      elif char == "#":
+      elif char == "-":
         digit = 11
+        digit_code = DIGIT_CODE[digit]
+        self.writeByte(digit_code)
+      elif char == "#":
+        digit = 10
         digit_code = DIGIT_CODE[digit]
         self.writeByte(digit_code)
       elif CHAR_MAP.get(char, None):
         digit_code = CHAR_MAP[char]
         self.writeByte(digit_code)
+      else:
+        print "dont know how to show:", char
+    self.stop()
+    self.start()
     self.set_command(MAX_BRIGHTNESS)
+    self.stop()
 
 if __name__ == "__main__":
     obj = TM1637(CLK,DI)
-    obj.show_auto("1234")
+    obj.show("1###")
     raw_input("Press Enter to continue...")
     obj.clear()
